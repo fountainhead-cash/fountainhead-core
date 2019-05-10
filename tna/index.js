@@ -20,9 +20,10 @@ var fromHash = function(hash, config) {
     rpc.getRawTransaction(hash, async function(err, transaction) {
       if (err) {
         console.log("Error: ", err)
+        reject(err);
       } else {
-        let result = await fromTx(transaction.result)
-        resolve(result)
+        let result = await fromTx(transaction.result);
+        resolve(result);
       }
     })
   })
@@ -34,6 +35,7 @@ var fromGene = function(gene, options) {
     let inputs = [];
     let outputs = [];
     let graph = {};
+    let atasks = [];
     if (gene.inputs) {
       gene.inputs.forEach(function(input, input_index) {
         if (input.script) {
@@ -66,6 +68,13 @@ var fromGene = function(gene, options) {
           let address = input.script.toAddress(bch.Networks.livenet).toString(bch.Address.CashAddrFormat).split(':')[1];
           if (address && address.length > 0) {
             sender.a = address;
+          } else {
+            atasks.push(new Promise(function(resolve, reject) {
+              return fromHash(sender.h).then(function(tx) {
+                sender.a = tx.out[sender.i].e.a;
+                resolve(sender.a);
+              });
+            }));
           }
           xput.e = sender;
           inputs.push(xput)
@@ -111,15 +120,18 @@ var fromGene = function(gene, options) {
         }
       })
     }
-    resolve({
-      tx: { h: t.hash },
-      in: inputs,
-      out: outputs
-    })
+    Promise.all(atasks)
+    .then(function(data) {
+      resolve({
+        tx: { h: t.hash },
+        in: inputs,
+        out: outputs
+      })
+    });
   })
 }
 var fromTx = function(transaction, options) {
-    return fromGene(new bch.Transaction(transaction), options);
+  return fromGene(new bch.Transaction(transaction), options);
 }
 
 module.exports = {
