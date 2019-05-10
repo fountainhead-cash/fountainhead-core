@@ -20,6 +20,7 @@ var fromHash = function(hash, config) {
     rpc.getRawTransaction(hash, async function(err, transaction) {
       if (err) {
         console.log("Error: ", err)
+        reject(err);
       } else {
         let result = await fromTx(transaction.result);
         resolve(result);
