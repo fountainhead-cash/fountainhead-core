@@ -35,7 +35,6 @@ var fromGene = function(gene, options) {
     let inputs = [];
     let outputs = [];
     let graph = {};
-    let atasks = [];
     if (gene.inputs) {
       gene.inputs.forEach(function(input, input_index) {
         if (input.script) {
@@ -69,13 +68,18 @@ var fromGene = function(gene, options) {
           if (address && address.length > 0) {
             sender.a = address;
           } else {
-            atasks.push(new Promise(function(resolve, reject) {
-              return fromHash(sender.h).then(function(tx) {
-                sender.a = tx.out[sender.i].e.a;
-                resolve(sender.a);
-              });
-            }));
+            try {
+              const scriptsigarr = input.script.toASM().split(' ');
+              const redeemscript = scriptsigarr[scriptsigarr.length - 1];
+              const hash160 = bch.crypto.Hash.sha256ripemd160(new Buffer.from(redeemscript, 'hex'));
+              const address = bch.Address.fromScriptHash(hash160, bch.Networks.livenet);
+
+              sender.a = address.toString(bch.Address.CashAddrFormat).split(':')[1];
+            } catch (e) {
+              console.error('script address unable to be decoded')
+            }
           }
+
           xput.e = sender;
           inputs.push(xput)
         }
@@ -120,13 +124,10 @@ var fromGene = function(gene, options) {
         }
       })
     }
-    Promise.all(atasks)
-    .then(function(data) {
-      resolve({
-        tx: { h: t.hash },
-        in: inputs,
-        out: outputs
-      })
+    resolve({
+      tx: { h: t.hash },
+      in: inputs,
+      out: outputs
     });
   })
 }
