@@ -1,6 +1,6 @@
 {
   "name": "fountainhead-core",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Fountainhead suite: bcode, bigjq, tna, bitqueryd, bitsocketd, and slp variants",
   "main": "index.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "mongodb": "^3.1.4",
     "json-pointer": "^0.6.0",
     "bignumber.js": "^8.1.1",
-    "bitcore-lib-cash": "^0.19.0",
+    "bitcore-lib-cash": "^8.3.0",
     "cors": "^2.8.4",
     "express": "^4.16.4",
     "ip": "^1.1.5",
