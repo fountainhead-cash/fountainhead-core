@@ -70,22 +70,18 @@ var fromGene = function(gene, options) {
           } else {
             try {
               const scriptsigarr = input.script.toASM().split(' ');
+              const redeemscript = scriptsigarr[scriptsigarr.length - 1];
+              const hash160 = bch.crypto.Hash.sha256ripemd160(Buffer.from(redeemscript, 'hex'));
 
               // schnorr test TODO improve this
               if (scriptsigarr.length === 2 &&
                   scriptsigarr[0].length === 130 &&
-                  scriptsigarr[1].length === 66
+                  (scriptsigarr[1].length === 66 || scriptsigarr[1].length === 130)
               ) {
-                const pubkey = Buffer.from(scriptsigarr[1], 'hex');
-                const hash160 = bch.crypto.Hash.sha256ripemd160(Buffer.from(pubkey, 'hex'));
                 const address = bch.Address.fromPublicKeyHash(hash160, bch.Networks.livenet);
-
                 sender.a = address.toString(bch.Address.CashAddrFormat).split(':')[1];
               } else {
-                const redeemscript = scriptsigarr[scriptsigarr.length - 1];
-                const hash160 = bch.crypto.Hash.sha256ripemd160(Buffer.from(redeemscript, 'hex'));
                 const address = bch.Address.fromScriptHash(hash160, bch.Networks.livenet);
-
                 sender.a = address.toString(bch.Address.CashAddrFormat).split(':')[1];
               }
             } catch (e) {
