@@ -3,14 +3,15 @@ const jq = require('../bigjq')
 const bcode = require('../bcode')
 const MongoClient = require('mongodb').MongoClient
 const BigNumber = require('bignumber.js')
-const dbTypes = ["t", "u", "c", "g", "a", "x"]
+const dbTypes = ["t", "u", "c", "g", "a", "x", "s"]
 const dbMapping = {
   t: "tokens",
   u: "unconfirmed",
   c: "confirmed",
   g: "graphs",
   a: "addresses",
-  x: "utxos"
+  x: "utxos",
+  s: "statuses",
 }
 const ops = ["db", "find", "aggregate", "sort", "project", "limit", "skip", "distinct"]
 var db, client

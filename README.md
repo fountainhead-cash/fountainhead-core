@@ -14,3 +14,5 @@ This is a collection of projects written initially by [_unwriter](https://twitte
 * tna: MIT
 
 All future development, forks, etc is under MIT license. 
+
+Additionally, `bitcoind-rpc` is from BitPay and licensed MIT (https://github.com/bitpay/bitcoind-rpc)
