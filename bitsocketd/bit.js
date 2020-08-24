@@ -3,11 +3,12 @@ const zmq = require("zeromq")
 const mingo = require("mingo")
 const bcode = require("../bcode")
 const jq = require("../bigjq")
-const defaults = { host: "127.0.0.1", port: 28339 }
+const defaults = { host: "127.0.0.1", port: 28339, logs: 'dev' }
 const init = function(config) {
   let sock = zmq.socket("sub")
   let host = (config.host ? config.host : defaults.host)
   let port = (config.port ? config.port : defaults.port)
+  let logs = (config.logs ? config.logs : defaults.logs)
   let connections = config.connections
   sock.connect("tcp://" + host + ":" + port)
   sock.subscribe("mempool")
@@ -29,12 +30,16 @@ const init = function(config) {
               let result
               try {
                 if (encoded.r && encoded.r.f) {
-                  result = await jq.run(encoded.r.f, [decoded])
+                  if(logs = 'dev') {
+                    result = await jq.run(encoded.r.f, [decoded], true)
+                  } else {
+                    result = await jq.run(encoded.r.f, [decoded], false)
+                  }
                 } else {
                   result = [decoded]
                 }
               } catch (e) {
-                console.log("Error", e)
+                console.error("Error", e)
               }
               connection.res.sseSend({ type: "mempool", data: result })
             }
@@ -60,13 +65,17 @@ const init = function(config) {
               let result
               try {
                 if (encoded.r && encoded.r.f) {
-                  result = await jq.run(encoded.r.f, [decoded])
+                  if(logs == 'dev') {
+                    result = await jq.run(encoded.r.f, [decoded], true)
+                  } else {
+                    result = await jq.run(encoded.r.f, [decoded], false)
+                  }
                 } else {
                   result = decoded
                 }
                 transformed.push(result)
               } catch (e) {
-                console.log("Error", e)
+                console.error("Error", e)
               }
             }
             connection.res.sseSend({
