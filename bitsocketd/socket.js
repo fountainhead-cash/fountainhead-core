@@ -2,10 +2,11 @@
 const cors = require("cors")
 const express = require("express")
 const ip = require("ip")
-const bch = require("bitcore-lib-cash")
+const { v4: uuid } = require('uuid')
 const defaults = { port: 3001 }
 const init = function(config) {
   let app = (config.app ? config.app : express())
+  let logs = (config.logs ? config.logs : 'dev')
   let connections = config.connections
   app.use(cors())
   app.use(function (req, res, next) {
@@ -18,12 +19,8 @@ const init = function(config) {
       })
       res.sseSend({ type: "open", data: [] })
     }
-    res.sseSend = function(data) {
-      res.write("data: " + JSON.stringify(data) + "\n\n")
-    }
-    res.sseHeartbeat = function() {
-      res.write(":heartbeat" + "\n\n")
-    }
+    res.sseSend = function(data) {res.write("data: " + JSON.stringify(data) + "\n\n")}
+    res.sseHeartbeat = function() {res.write(":heartbeat" + "\n\n")}
     next()
   })
   app.get("/s", async function(req, res) {
@@ -31,53 +28,44 @@ const init = function(config) {
       let query = {
         "v": 3, "q": { "find": {} }
       }
-
-      // bitcoin address as fingerprint
-      const privateKey = new bch.PrivateKey()
-      const fingerprint = privateKey.toAddress().toString()
-
+      const fingerprint = uuid()
       res.$fingerprint = fingerprint
       connections.pool[fingerprint] = { res: res, query: query }
-      console.log("## Opening connection from: " + fingerprint)
-      console.log(JSON.stringify(req.headers, null, 2))
+
+      console.log("## Opening: " + fingerprint + " - (" + Object.keys(connections.pool).length + " total)")
+      if (logs == 'dev') console.log(JSON.stringify(req.headers, null, 2))
       req.on("close", function() {
-        console.log("## Closing connection from: " + res.$fingerprint)
-        console.log(JSON.stringify(req.headers, null, 2))
+        console.log("## Closing: " + res.$fingerprint + " - (" + Object.keys(connections.pool).length + " total)")
         delete connections.pool[res.$fingerprint]
-        console.log(".. Pool size is now", Object.keys(connections.pool).length)
+        if (logs == 'dev') console.log(JSON.stringify(req.headers, null, 2))
       })
     } catch (e) {
-      console.log(e)
+      console.error(e)
     }
   })
   app.get(/^\/s\/(.+)/, async function(req, res) {
     try {
       let b64 = req.params[0]
-
-      // bitcoin address as fingerprint
-      const privateKey = new bch.PrivateKey()
-      const fingerprint = privateKey.toAddress().toString()
-
+      const fingerprint = uuid()
       res.sseSetup()
       let json = Buffer.from(b64, "base64").toString()
       let query = JSON.parse(json)
       if (! query.q) {
-          query.q = {};
+          query.q = {}
       }
 
       res.$fingerprint = fingerprint
       connections.pool[fingerprint] = { res: res, query: query }
 
-      console.log("## Opening connection from: " + fingerprint)
-      console.log(JSON.stringify(req.headers, null, 2))
+      console.log("## Opening: " + fingerprint + " - (" + Object.keys(connections.pool).length + " total)")
+      if (logs == 'dev') console.log(JSON.stringify(req.headers, null, 2))
       req.on("close", function() {
-        console.log("## Closing connection from: " + res.$fingerprint)
-        console.log(JSON.stringify(req.headers, null, 2))
+        console.log("## Closing: " + res.$fingerprint + " - (" + Object.keys(connections.pool).length + " total)")
         delete connections.pool[res.$fingerprint]
-        console.log(".. Pool size is now", Object.keys(connections.pool).length)
+        if (logs == 'dev') console.log(JSON.stringify(req.headers, null, 2))
       })
     } catch (e) {
-      console.log(e)
+      console.error(e)
     }
   })
   // if no express app was passed in, need to bootstrap.
@@ -91,19 +79,18 @@ const init = function(config) {
       console.log("#")
       console.log(`#  API Endpoint: ${ip.address()}:${port}/s`)
       console.log("#")
-      console.log("#  Learn more at https://bitsocket.org")
+      console.log("#  Learn more at https://fountainhead.cash")
       console.log("#")
       console.log("######################################################################################")
     })
   }
-
   // set up heartbeat
   setInterval(function() {
-    console.log('## Sending heartbeat to ' + Object.keys(connections.pool).length);
+    console.log('## Sending heartbeat to ' + Object.keys(connections.pool).length)
     Object.keys(connections.pool).forEach(async function(key) {
       let connection = connections.pool[key]
       connection.res.sseHeartbeat()
-    });
-  }, (config.heartbeat ? config.heartbeat : 10) * 1000); // every N seconds
+    })
+  }, (config.heartbeat ? config.heartbeat : 10) * 1000) // every N seconds
 }
 module.exports = { init: init }
