@@ -32,7 +32,7 @@ const init = function(config) {
         "v": 3, "q": { "find": {} }
       }
 
-      const fingerprint = uuid().split('-')[1]
+      const fingerprint = uuid().split('-')[0]
 
       res.$fingerprint = fingerprint
       connections.pool[fingerprint] = { res: res, query: query }
@@ -52,7 +52,7 @@ const init = function(config) {
     try {
       let b64 = req.params[0]
 
-      const fingerprint = uuid().split('-')[1]
+      const fingerprint = uuid().split('-')[0]
 
       res.sseSetup()
       let json = Buffer.from(b64, "base64").toString()
