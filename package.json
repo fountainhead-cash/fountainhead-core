@@ -24,7 +24,8 @@
     "node-jq": "^1.6.0",
     "sinon": "^7.3.2",
     "traverse": "^0.6.6",
-    "zeromq": "^5.1.0"
+    "zeromq": "^5.1.0",
+    "uuid": "^8.3.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
