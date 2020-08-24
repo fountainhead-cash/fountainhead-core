@@ -34,7 +34,7 @@ const init = function(config) {
                   result = [decoded]
                 }
               } catch (e) {
-                console.log("Error", e)
+                console.error("Error", e)
               }
               connection.res.sseSend({ type: "mempool", data: result })
             }
@@ -66,7 +66,7 @@ const init = function(config) {
                 }
                 transformed.push(result)
               } catch (e) {
-                console.log("Error", e)
+                console.error("Error", e)
               }
             }
             connection.res.sseSend({
