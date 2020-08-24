@@ -2,7 +2,7 @@
 const cors = require("cors")
 const express = require("express")
 const ip = require("ip")
-const bch = require("bitcore-lib-cash")
+const { v4: uuid } = require('uuid');
 const defaults = { port: 3001 }
 const init = function(config) {
   let app = (config.app ? config.app : express())
@@ -32,31 +32,27 @@ const init = function(config) {
         "v": 3, "q": { "find": {} }
       }
 
-      // bitcoin address as fingerprint
-      const privateKey = new bch.PrivateKey()
-      const fingerprint = privateKey.toAddress().toString()
+      const fingerprint = uuid().split('-')[1]
 
       res.$fingerprint = fingerprint
       connections.pool[fingerprint] = { res: res, query: query }
-      console.log("## Opening connection from: " + fingerprint)
-      console.log(JSON.stringify(req.headers, null, 2))
+      console.log("## Opening from: " + fingerprint)
+      //console.log(JSON.stringify(req.headers, null, 2))
       req.on("close", function() {
-        console.log("## Closing connection from: " + res.$fingerprint)
-        console.log(JSON.stringify(req.headers, null, 2))
+        console.log("## Closing from: " + res.$fingerprint)
+        //console.log(JSON.stringify(req.headers, null, 2))
         delete connections.pool[res.$fingerprint]
-        console.log(".. Pool size is now", Object.keys(connections.pool).length)
+        console.log("## Pool size:", Object.keys(connections.pool).length)
       })
     } catch (e) {
-      console.log(e)
+      console.error(e)
     }
   })
   app.get(/^\/s\/(.+)/, async function(req, res) {
     try {
       let b64 = req.params[0]
 
-      // bitcoin address as fingerprint
-      const privateKey = new bch.PrivateKey()
-      const fingerprint = privateKey.toAddress().toString()
+      const fingerprint = uuid().split('-')[1]
 
       res.sseSetup()
       let json = Buffer.from(b64, "base64").toString()
@@ -68,16 +64,16 @@ const init = function(config) {
       res.$fingerprint = fingerprint
       connections.pool[fingerprint] = { res: res, query: query }
 
-      console.log("## Opening connection from: " + fingerprint)
-      console.log(JSON.stringify(req.headers, null, 2))
+      console.log("## Opening from: " + fingerprint)
+      //console.log(JSON.stringify(req.headers, null, 2))
       req.on("close", function() {
-        console.log("## Closing connection from: " + res.$fingerprint)
-        console.log(JSON.stringify(req.headers, null, 2))
+        console.log("## Closing from: " + res.$fingerprint)
+        //console.log(JSON.stringify(req.headers, null, 2))
         delete connections.pool[res.$fingerprint]
-        console.log(".. Pool size is now", Object.keys(connections.pool).length)
+        console.log("## Pool size:", Object.keys(connections.pool).length)
       })
     } catch (e) {
-      console.log(e)
+      console.error(e)
     }
   })
   // if no express app was passed in, need to bootstrap.
